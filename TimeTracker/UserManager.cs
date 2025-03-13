@@ -51,7 +51,7 @@ public class UserManager
         return lines.Select(line =>
         {
             var parts = line.Split(',');
-            bool isManager = parts.Length > 2 && bool.TryParse(parts[2], out bool result) ? result : false;
+            bool isManager = bool.TryParse(parts[2], out bool result) ? result : false;
             return new User(parts[0], parts[1], isManager);
         }).ToList();
     }
