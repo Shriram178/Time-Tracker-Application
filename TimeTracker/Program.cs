@@ -17,7 +17,8 @@ public class Program
 
     static void RunApplication(UserInteractor userInteractor, Logger logger)
     {
-        while (true)
+        bool isRunning = true;
+        while (isRunning)
         {
             try
             {
@@ -33,8 +34,8 @@ public class Program
                         userInteractor.Login();
                         break;
                     case "Exit":
-                        ExitApplication();
-                        return;
+                        isRunning = false;
+                        break;
                     default:
                         logger.DisplayFailure("Invalid choice! Please try again.");
                         break;
@@ -47,10 +48,4 @@ public class Program
         }
     }
 
-    static void ExitApplication()
-    {
-        Console.Clear();
-        Console.WriteLine("Exiting application...");
-        Environment.Exit(0);
-    }
 }
