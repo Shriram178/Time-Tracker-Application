@@ -9,7 +9,7 @@ public class Program
         FileHandler fileHandler = new FileHandler();
         Logger logger = new Logger();
         UserManager userManager = new UserManager(fileHandler);
-        UserInteractor userInteractor = new UserInteractor(userManager, logger);
+        UserInteractor userInteractor = new UserInteractor(userManager, logger, fileHandler);
 
         RunApplication(userInteractor, logger);
     }

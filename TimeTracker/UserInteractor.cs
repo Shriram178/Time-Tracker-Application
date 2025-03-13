@@ -11,15 +11,17 @@ public class UserInteractor
 {
     private readonly UserManager _userManager;
     private readonly Logger _logger;
+    private readonly FileHandler _fileHandler;
     private User? _loggedInUser;
 
     /// <summary>
     /// Constructor to perform dependency injection.
     /// </summary>
-    public UserInteractor(UserManager userManager, Logger logger)
+    public UserInteractor(UserManager userManager, Logger logger, FileHandler fileHandler)
     {
         _userManager = userManager;
         _logger = logger;
+        _fileHandler = fileHandler;
     }
 
     /// <summary>
@@ -34,8 +36,6 @@ public class UserInteractor
         string? UserChoice = CreateDropDown<string>(StringConstants.Authorization, StringConstants.Greetings, "");
         return UserChoice;
     }
-
-
 
     /// <summary>
     /// Prompts the user to get info about details to
@@ -108,8 +108,50 @@ public class UserInteractor
         }
 
         _logger.DisplaySuccess("[+] Logged in !!");
+
+        while (true)
+        {
+            string choice = CreateDropDown(StringConstants.options, $"Dashboard - {_loggedInUser.UserName}", "[Up/Down] to navigate, [Enter] to select");
+
+            switch (choice)
+            {
+                case "Create Project":
+                    CreateProject(_loggedInUser.UserName);
+                    break;
+                case "Create Task":
+                    CreateTask(_loggedInUser.UserName);
+                    break;
+            }
+        }
     }
 
+    private string SelectProject(string username)
+    {
+        List<string> projects = _fileHandler.GetProjectFolders(username);
+        if (projects.Count == 0)
+        {
+            _logger.DisplayFailure("No projects found! Create a project first.");
+            return null;
+        }
+        return CreateDropDown(projects, "Select a project:", "[Up/Down] to navigate, [Enter] to select");
+    }
+
+    private void CreateTask(string username)
+    {
+        string project = SelectProject(username);
+        if (project == null) return;
+
+        string taskName = PromptForInput("Enter task name: ", "Task name cannot be empty!");
+        _fileHandler.CreateTaskFolder(username, project, taskName);
+        _logger.DisplaySuccess($"Task '{taskName}' created in project '{project}'!");
+    }
+
+    private void CreateProject(string username)
+    {
+        string projectName = PromptForInput("Enter project name: ", "Project name cannot be empty!");
+        _fileHandler.CreateProjectFolder(username, projectName);
+        _logger.DisplaySuccess($"Project '{projectName}' created successfully!");
+    }
 
 
 
@@ -177,7 +219,7 @@ public class UserInteractor
         _logger.DisplayTitle(menuOptions);
     }
 
-    private string PromptForInput(string prompt, string invalidMessage, string? warningMessage = null, int maxLength = 20)
+    private string PromptForInput(string prompt, string invalidMessage, string warningMessage = "The string size must be within 20 !", int maxLength = 20)
     {
         int inputRow = Console.CursorTop; // Store the input line position
 

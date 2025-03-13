@@ -47,6 +47,8 @@ public static class StringConstants
         "Logout"
     };
 
+    public static readonly string maxCharacterWarning = "The string size must be within 20 !";
+
     public static readonly string[] UserRoles = { "Regular User", "Manager" };
 
 }

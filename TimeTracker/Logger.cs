@@ -2,6 +2,10 @@
 
 public class Logger
 {
+    /// <summary>
+    /// Display message in green color
+    /// </summary>
+    /// <param name="message">string to display</param>
     public void DisplaySuccess(string message)
     {
         Console.ForegroundColor = ConsoleColor.Green;
@@ -10,6 +14,10 @@ public class Logger
         Thread.Sleep(1000);
     }
 
+    /// <summary>
+    /// Display message in green color
+    /// </summary>
+    /// <param name="message">string to display</param>
     public void DisplayFailure(string message)
     {
         Console.ForegroundColor = ConsoleColor.Red;
@@ -18,6 +26,10 @@ public class Logger
         Thread.Sleep(500);
     }
 
+    /// <summary>
+    /// Display message in green color
+    /// </summary>
+    /// <param name="message">string to display</param>
     public void DisplayTitle(string message)
     {
         Console.ForegroundColor = ConsoleColor.Yellow;
