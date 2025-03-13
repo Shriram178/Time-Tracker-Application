@@ -44,6 +44,7 @@ public static class StringConstants
         "Create Task",
         "Create Subtask",
         "Start Timer on Subtask",
+        "Stop Timer on Subtask",
         "Logout"
     };
 

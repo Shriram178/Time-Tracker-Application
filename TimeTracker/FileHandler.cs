@@ -24,7 +24,7 @@ public class FileHandler
 
     public void CreateProjectFolder(string username, string projectName)
     {
-        string projectPath = Path.Combine(BaseDirectory, "Users", username, projectName);
+        string projectPath = Path.Combine(BaseDirectory, "Users", username, "Project_" + projectName);
         EnsureDirectoryExists(projectPath);
     }
 
@@ -36,7 +36,7 @@ public class FileHandler
 
     public void CreateTaskFolder(string username, string projectName, string taskName)
     {
-        string taskPath = Path.Combine(BaseDirectory, "Users", username, projectName, taskName);
+        string taskPath = Path.Combine(BaseDirectory, "Users", username, projectName, "Task_" + taskName);
         EnsureDirectoryExists(taskPath);
     }
 
@@ -48,7 +48,7 @@ public class FileHandler
 
     public void CreateSubTaskFolder(string username, string projectName, string taskName, string subTaskName)
     {
-        string subTaskPath = Path.Combine(BaseDirectory, "Users", username, projectName, taskName, subTaskName);
+        string subTaskPath = Path.Combine(BaseDirectory, "Users", username, projectName, taskName, "SubTask_" + subTaskName);
         EnsureDirectoryExists(subTaskPath);
     }
 

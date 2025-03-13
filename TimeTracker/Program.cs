@@ -9,7 +9,8 @@ public class Program
         FileHandler fileHandler = new FileHandler();
         Logger logger = new Logger();
         UserManager userManager = new UserManager(fileHandler);
-        UserInteractor userInteractor = new UserInteractor(userManager, logger, fileHandler);
+        TimeTrackingManager timeTrackingManager = new TimeTrackingManager(fileHandler);
+        UserInteractor userInteractor = new UserInteractor(userManager, logger, fileHandler, timeTrackingManager);
 
         RunApplication(userInteractor, logger);
     }

@@ -12,16 +12,18 @@ public class UserInteractor
     private readonly UserManager _userManager;
     private readonly Logger _logger;
     private readonly FileHandler _fileHandler;
+    private readonly TimeTrackingManager _timeTrackingManager;
     private User? _loggedInUser;
 
     /// <summary>
     /// Constructor to perform dependency injection.
     /// </summary>
-    public UserInteractor(UserManager userManager, Logger logger, FileHandler fileHandler)
+    public UserInteractor(UserManager userManager, Logger logger, FileHandler fileHandler, TimeTrackingManager timeTrackingManager)
     {
         _userManager = userManager;
         _logger = logger;
         _fileHandler = fileHandler;
+        _timeTrackingManager = timeTrackingManager;
     }
 
     /// <summary>
@@ -124,12 +126,47 @@ public class UserInteractor
                 case "Create Subtask":
                     CreateSubtask(_loggedInUser.UserName);
                     break;
+                case "Start Timer on Subtask":
+                    StartTimerOnSubtask(_loggedInUser.UserName);
+                    break;
+                case "Stop Timer on Subtask":
+                    _timeTrackingManager.StopTimer();
+                    break;
                 case "Logout":
                     Console.WriteLine("Logging out...");
                     _loggedInUser = null;
                     return;
             }
         }
+    }
+
+    private void StartTimerOnSubtask(string username)
+    {
+        string project = SelectProject(username);
+        if (project == null) return;
+
+        string task = SelectTask(username, project);
+        if (task == null) return;
+
+        string subtask = SelectSubtask(username, project, task);
+        if (subtask == null) return;
+
+        string workDescription = PromptForInput("Enter work description: ", "Work description cannot be empty!");
+        bool isBillable = CreateDropDown(new List<string> { "Yes", "No" }, "Is this work billable?", "[Up/Down] to navigate, [Enter] to select") == "Yes";
+
+        _timeTrackingManager.StartTimer(username, project, task, subtask, workDescription, isBillable);
+        //_logger.DisplaySuccess("Timer started for subtask!");
+    }
+
+    private string SelectSubtask(string username, string project, string task)
+    {
+        List<string> subtasks = _fileHandler.GetSubTaskFolders(username, project, task);
+        if (subtasks.Count == 0)
+        {
+            _logger.DisplayFailure("No subtasks found! Create a subtask first.");
+            return null;
+        }
+        return CreateDropDown(subtasks, "Select a subtask:", "[Up/Down] to navigate, [Enter] to select");
     }
 
     private void CreateSubtask(string username)
@@ -184,10 +221,6 @@ public class UserInteractor
         _fileHandler.CreateProjectFolder(username, projectName);
         _logger.DisplaySuccess($"Project '{projectName}' created successfully!");
     }
-
-
-
-
 
     private T? CreateDropDown<T>(IList<T> items, string message, string menuOptions)
     {
