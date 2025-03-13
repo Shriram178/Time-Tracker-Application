@@ -10,7 +10,6 @@ public class Program
         Logger logger = new Logger();
         UserManager userManager = new UserManager(fileHandler);
         UserInteractor userInteractor = new UserInteractor(userManager, logger);
-        Console.WriteLine("Hello, World!");
 
         RunApplication(userInteractor, logger);
     }
