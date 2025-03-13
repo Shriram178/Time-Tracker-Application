@@ -121,8 +121,28 @@ public class UserInteractor
                 case "Create Task":
                     CreateTask(_loggedInUser.UserName);
                     break;
+                case "Create Subtask":
+                    CreateSubtask(_loggedInUser.UserName);
+                    break;
+                case "Logout":
+                    Console.WriteLine("Logging out...");
+                    _loggedInUser = null;
+                    return;
             }
         }
+    }
+
+    private void CreateSubtask(string username)
+    {
+        string project = SelectProject(username);
+        if (project == null) return;
+
+        string task = SelectTask(username, project);
+        if (task == null) return;
+
+        string subtaskName = PromptForInput("Enter subtask name: ", "Subtask name cannot be empty!");
+        _fileHandler.CreateSubTaskFolder(username, project, task, subtaskName);
+        _logger.DisplaySuccess($"Subtask '{subtaskName}' created in task '{task}'!");
     }
 
     private string SelectProject(string username)
@@ -135,6 +155,18 @@ public class UserInteractor
         }
         return CreateDropDown(projects, "Select a project:", "[Up/Down] to navigate, [Enter] to select");
     }
+
+    private string SelectTask(string username, string project)
+    {
+        List<string> tasks = _fileHandler.GetTaskFolders(username, project);
+        if (tasks.Count == 0)
+        {
+            _logger.DisplayFailure("No tasks found! Create a task first.");
+            return null;
+        }
+        return CreateDropDown(tasks, "Select a task:", "[Up/Down] to navigate, [Enter] to select");
+    }
+
 
     private void CreateTask(string username)
     {
@@ -152,6 +184,8 @@ public class UserInteractor
         _fileHandler.CreateProjectFolder(username, projectName);
         _logger.DisplaySuccess($"Project '{projectName}' created successfully!");
     }
+
+
 
 
 

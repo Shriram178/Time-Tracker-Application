@@ -40,4 +40,22 @@ public class FileHandler
         EnsureDirectoryExists(taskPath);
     }
 
+    public List<string> GetTaskFolders(string username, string projectName)
+    {
+        string projectPath = Path.Combine(BaseDirectory, "Users", username, projectName);
+        return Directory.Exists(projectPath) ? new List<string>(Directory.GetDirectories(projectPath)) : new List<string>();
+    }
+
+    public void CreateSubTaskFolder(string username, string projectName, string taskName, string subTaskName)
+    {
+        string subTaskPath = Path.Combine(BaseDirectory, "Users", username, projectName, taskName, subTaskName);
+        EnsureDirectoryExists(subTaskPath);
+    }
+
+    public List<string> GetSubTaskFolders(string username, string projectName, string taskName)
+    {
+        string taskPath = Path.Combine(BaseDirectory, "Users", username, projectName, taskName);
+        return Directory.Exists(taskPath) ? new List<string>(Directory.GetDirectories(taskPath)) : new List<string>();
+    }
+
 }
