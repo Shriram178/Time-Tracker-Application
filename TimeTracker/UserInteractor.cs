@@ -101,7 +101,10 @@ public class UserInteractor
     /// <summary>
     /// Displays the dashboard where users can create projects, tasks, subtasks, and start timers.
     /// </summary>
-    private void ShowDashboard()
+    /// <summary>
+    /// Displays the dashboard where users can create projects, tasks, subtasks, and start timers.
+    /// </summary>
+    public void ShowDashboard()
     {
         if (_loggedInUser == null)
         {
@@ -109,118 +112,121 @@ public class UserInteractor
             return;
         }
 
-        _logger.DisplaySuccess("[+] Logged in !!");
-
         while (true)
         {
-            string choice = CreateDropDown(StringConstants.options, $"Dashboard - {_loggedInUser.UserName}", "[Up/Down] to navigate, [Enter] to select");
+            List<string> projectPaths = _fileHandler.GetProjectFolders(_loggedInUser.UserName);
+            Dictionary<string, string> projectMap = projectPaths.ToDictionary(p => Path.GetFileName(p), p => p);
 
-            switch (choice)
+            List<string> options = new() { "Create Project" };
+            options.AddRange(projectMap.Keys);
+
+            string choice = CreateDropDown(options, $"Projects - {_loggedInUser.UserName}", "[Up/Down] to navigate, [Enter] to select, [Esc] to exit");
+
+            if (choice == null) return; // Exit on ESC
+            if (choice == "Create Project")
             {
-                case "Create Project":
-                    CreateProject(_loggedInUser.UserName);
-                    break;
-                case "Create Task":
-                    CreateTask(_loggedInUser.UserName);
-                    break;
-                case "Create Subtask":
-                    CreateSubtask(_loggedInUser.UserName);
-                    break;
-                case "Start Timer on Subtask":
-                    StartTimerOnSubtask(_loggedInUser.UserName);
-                    break;
-                case "Stop Timer on Subtask":
-                    _timeTrackingManager.StopTimer();
-                    break;
-                case "Logout":
-                    Console.WriteLine("Logging out...");
-                    _loggedInUser = null;
-                    return;
+                CreateProject(_loggedInUser.UserName);
+            }
+            else
+            {
+                ShowTaskMenu(_loggedInUser.UserName, projectMap[choice]); // Pass full path
             }
         }
     }
 
-    private void StartTimerOnSubtask(string username)
+    private void ShowTaskMenu(string username, string projectPath)
     {
-        string project = SelectProject(username);
-        if (project == null) return;
-
-        string task = SelectTask(username, project);
-        if (task == null) return;
-
-        string subtask = SelectSubtask(username, project, task);
-        if (subtask == null) return;
-
-        string workDescription = PromptForInput("Enter work description: ", "Work description cannot be empty!");
-        bool isBillable = CreateDropDown(new List<string> { "Yes", "No" }, "Is this work billable?", "[Up/Down] to navigate, [Enter] to select") == "Yes";
-
-        _timeTrackingManager.StartTimer(username, project, task, subtask, workDescription, isBillable);
-        //_logger.DisplaySuccess("Timer started for subtask!");
-    }
-
-    private string SelectSubtask(string username, string project, string task)
-    {
-        List<string> subtasks = _fileHandler.GetSubTaskFolders(username, project, task);
-        if (subtasks.Count == 0)
+        while (true)
         {
-            _logger.DisplayFailure("No subtasks found! Create a subtask first.");
-            return null;
+            List<string> taskPaths = _fileHandler.GetTaskFolders(username, projectPath);
+            Dictionary<string, string> taskMap = taskPaths.ToDictionary(t => Path.GetFileName(t), t => t);
+
+            List<string> options = new() { "Create Task" };
+            options.AddRange(taskMap.Keys);
+
+            string choice = CreateDropDown(options, $"Tasks in {Path.GetFileName(projectPath)}", "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
+
+            if (choice == null) return; // Back on ESC
+            if (choice == "Create Task")
+            {
+                CreateTask(username, projectPath);
+            }
+            else
+            {
+                ShowSubtaskMenu(username, projectPath, taskMap[choice]); // Pass full path
+            }
         }
-        return CreateDropDown(subtasks, "Select a subtask:", "[Up/Down] to navigate, [Enter] to select");
     }
 
-    private void CreateSubtask(string username)
+    private void ShowSubtaskMenu(string username, string projectPath, string taskPath)
     {
-        string project = SelectProject(username);
-        if (project == null) return;
-
-        string task = SelectTask(username, project);
-        if (task == null) return;
-
-        string subtaskName = PromptForInput("Enter subtask name: ", "Subtask name cannot be empty!");
-        _fileHandler.CreateSubTaskFolder(username, project, task, subtaskName);
-        _logger.DisplaySuccess($"Subtask '{subtaskName}' created in task '{task}'!");
-    }
-
-    private string SelectProject(string username)
-    {
-        List<string> projects = _fileHandler.GetProjectFolders(username);
-        if (projects.Count == 0)
+        while (true)
         {
-            _logger.DisplayFailure("No projects found! Create a project first.");
-            return null;
+            List<string> subtaskPaths = _fileHandler.GetSubTaskFolders(username, projectPath, taskPath);
+            Dictionary<string, string> subtaskMap = subtaskPaths.ToDictionary(st => Path.GetFileName(st), st => st);
+
+            List<string> options = new() { "Create Subtask" };
+            options.AddRange(subtaskMap.Keys);
+
+            string choice = CreateDropDown(options, $"Subtasks in {Path.GetFileName(taskPath)}", "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
+
+            if (choice == null) return; // Back on ESC
+            if (choice == "Create Subtask")
+            {
+                CreateSubtask(username, projectPath, taskPath);
+            }
+            else
+            {
+                ShowTimerMenu(username, projectPath, taskPath, subtaskMap[choice]); // Pass full path
+            }
         }
-        return CreateDropDown(projects, "Select a project:", "[Up/Down] to navigate, [Enter] to select");
     }
 
-    private string SelectTask(string username, string project)
+    private void ShowTimerMenu(string username, string project, string task, string subtask)
     {
-        List<string> tasks = _fileHandler.GetTaskFolders(username, project);
-        if (tasks.Count == 0)
+        while (true)
         {
-            _logger.DisplayFailure("No tasks found! Create a task first.");
-            return null;
+            List<string> options = new() { "Start Timer", "Stop Timer" };
+
+            string choice = CreateDropDown(options, $"Timer for {subtask}", "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
+
+            if (choice == null) return; // Back on ESC
+            if (choice == "Start Timer")
+            {
+                string workDescription = PromptForInput("Enter work description: ", "Work description cannot be empty!");
+                bool isBillable = CreateDropDown(new List<string> { "Yes", "No" }, "Is this work billable?", "[Up/Down] to navigate, [Enter] to select") == "Yes";
+                _timeTrackingManager.StartTimer(username, project, task, subtask, workDescription, isBillable);
+                _logger.DisplaySuccess("Timer started for subtask!");
+            }
+            else if (choice == "Stop Timer")
+            {
+                _timeTrackingManager.StopTimer();
+                _logger.DisplaySuccess("Timer stopped!");
+            }
         }
-        return CreateDropDown(tasks, "Select a task:", "[Up/Down] to navigate, [Enter] to select");
-    }
-
-
-    private void CreateTask(string username)
-    {
-        string project = SelectProject(username);
-        if (project == null) return;
-
-        string taskName = PromptForInput("Enter task name: ", "Task name cannot be empty!");
-        _fileHandler.CreateTaskFolder(username, project, taskName);
-        _logger.DisplaySuccess($"Task '{taskName}' created in project '{project}'!");
     }
 
     private void CreateProject(string username)
     {
         string projectName = PromptForInput("Enter project name: ", "Project name cannot be empty!");
         _fileHandler.CreateProjectFolder(username, projectName);
-        _logger.DisplaySuccess($"Project '{projectName}' created successfully!");
+        _logger.DisplaySuccess($"Project '{projectName}' created!");
     }
+
+    private void CreateTask(string username, string project)
+    {
+        string taskName = PromptForInput("Enter task name: ", "Task name cannot be empty!");
+        _fileHandler.CreateTaskFolder(username, project, taskName);
+        _logger.DisplaySuccess($"Task '{taskName}' created in '{project}'!");
+    }
+
+    private void CreateSubtask(string username, string project, string task)
+    {
+        string subtaskName = PromptForInput("Enter subtask name: ", "Subtask name cannot be empty!");
+        _fileHandler.CreateSubTaskFolder(username, project, task, subtaskName);
+        _logger.DisplaySuccess($"Subtask '{subtaskName}' created in '{task}'!");
+    }
+
 
     private T? CreateDropDown<T>(IList<T> items, string message, string menuOptions)
     {
