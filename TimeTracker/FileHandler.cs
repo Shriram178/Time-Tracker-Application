@@ -58,4 +58,22 @@ public class FileHandler
         return Directory.Exists(taskPath) ? new List<string>(Directory.GetDirectories(taskPath)) : new List<string>();
     }
 
+    /// <summary>
+    /// Gets the list of projects the user has worked on today based on the folder's last modified date.
+    /// </summary>
+    public List<string> GetRecentProjects(string username)
+    {
+        string userPath = Path.Combine(BaseDirectory, "Users", username);
+        if (!Directory.Exists(userPath))
+            return new List<string>();
+
+        DateTime today = DateTime.Today;
+        return Directory.GetDirectories(userPath)
+            .Select(dir => new DirectoryInfo(dir))
+            .Where(dirInfo => dirInfo.LastWriteTime.Date == today)
+            .OrderByDescending(dirInfo => dirInfo.LastWriteTime)
+            .Select(dirInfo => dirInfo.Name)
+            .ToList();
+    }
+
 }

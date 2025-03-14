@@ -112,13 +112,16 @@ public class UserInteractor
             return;
         }
 
+
+
         while (true)
         {
             List<string> projectPaths = _fileHandler.GetProjectFolders(_loggedInUser.UserName);
             Dictionary<string, string> projectMap = projectPaths.ToDictionary(p => Path.GetFileName(p), p => p);
 
-            List<string> options = new() { "Create Project" };
+            List<string> options = new() { "Create Project", "View Recent Work" };
             options.AddRange(projectMap.Keys);
+
 
             string choice = CreateDropDown(options, $"Projects - {_loggedInUser.UserName}", "[Up/Down] to navigate, [Enter] to select, [Esc] to exit");
 
@@ -127,12 +130,43 @@ public class UserInteractor
             {
                 CreateProject(_loggedInUser.UserName);
             }
+            else if (choice == "View Recent Work")
+            {
+                DisplayRecentWork();
+                Console.ReadLine(); // Pause to allow user to read the recent work
+            }
             else
             {
                 ShowTaskMenu(_loggedInUser.UserName, projectMap[choice]); // Pass full path
             }
         }
     }
+
+    private void DisplayRecentWork()
+    {
+        if (_loggedInUser == null) return;
+
+        // Get today's work entries directly from FileHandler
+        List<string> recentWork = _fileHandler.GetRecentProjects(_loggedInUser.UserName);
+
+        if (!recentWork.Any())
+        {
+            _logger.DisplayFailure("No recent work entries found for today.");
+            return;
+        }
+
+        Console.WriteLine("\nRecent Work Today:");
+        Console.WriteLine("───────────────────────────────────────────");
+
+        foreach (var project in recentWork)
+        {
+            Console.WriteLine($" - {project}");
+        }
+
+        Console.WriteLine("───────────────────────────────────────────\n");
+    }
+
+
 
     private void ShowTaskMenu(string username, string projectPath)
     {
@@ -234,6 +268,7 @@ public class UserInteractor
         ConsoleKey key;
         while (true)
         {
+            Console.WriteLine();
             DrawMenu(items, selectedIndex, message, menuOptions);
 
             key = Console.ReadKey(true).Key;
@@ -292,9 +327,11 @@ public class UserInteractor
         _logger.DisplayTitle(menuOptions);
     }
 
-    private string PromptForInput(string prompt, string invalidMessage, string warningMessage = "The string size must be within 20 !", int maxLength = 20)
+    private string PromptForInput(string prompt, string invalidMessage, string warningMessage = "The string size must be within 20!", int maxLength = 20)
     {
         int inputRow = Console.CursorTop; // Store the input line position
+
+        _timeTrackingManager.PauseTimerDisplay(true); // Pause timer while taking input
 
         while (true)
         {
@@ -318,6 +355,8 @@ public class UserInteractor
                 _logger.DisplayFailure(warningMessage);
                 continue;
             }
+
+            _timeTrackingManager.PauseTimerDisplay(false); // Resume timer after valid input
 
             return input;
         }

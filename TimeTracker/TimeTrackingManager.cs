@@ -10,6 +10,7 @@ public class TimeTrackingManager
     private string _workDescription;
     private bool _isBillable;
     private bool _isRunning;
+    private bool _pauseTimerDisplay;
 
     public TimeTrackingManager(FileHandler fileHandler)
     {
@@ -34,23 +35,44 @@ public class TimeTrackingManager
         _isBillable = isBillable;
         _stopwatch.Restart();
         _isRunning = true;
+        _pauseTimerDisplay = false;
 
+        Console.Clear(); // Clear screen and reserve the first line for the timer
+        Console.SetCursorPosition(0, 1);
         Console.WriteLine("Timer started...");
-        Thread timerThread = new Thread(() => DisplayTimer(workDescription));
+
+        Thread timerThread = new Thread(DisplayTimer);
         timerThread.Start();
     }
 
-    private void DisplayTimer(string workDescription)
+    public void PauseTimerDisplay(bool pause)
+    {
+        _pauseTimerDisplay = pause;
+    }
+
+
+    private void DisplayTimer()
     {
         while (_isRunning)
         {
-            Console.SetCursorPosition(0, Console.CursorTop);
+            if (_pauseTimerDisplay)
+            {
+                Thread.Sleep(500);
+                continue;
+            }
+
+            Console.SetCursorPosition(0, 0); // Always show timer on the first line
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"Working on {workDescription} - Elapsed time: {_stopwatch.Elapsed:hh\\:mm\\:ss}");
+            Console.Write(new string(' ', Console.WindowWidth)); // Clear the line
+            Console.SetCursorPosition(0, 0);
+            Console.Write($"Working on {_workDescription} - Elapsed time: {_stopwatch.Elapsed:hh\\:mm\\:ss}\n");
             Console.ResetColor();
             Thread.Sleep(1000);
-
         }
+
+        // Clear the timer when stopping
+        Console.SetCursorPosition(0, 0);
+        Console.Write(new string(' ', Console.WindowWidth));
     }
 
     public void StopTimer()
@@ -68,8 +90,23 @@ public class TimeTrackingManager
         string endTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
         File.AppendAllText(_currentFilePath, $"{startTime},{endTime},{_workDescription},{(_isBillable ? "Yes" : "No")}\n");
+
+        Console.SetCursorPosition(0, 0);
+        Console.Write(new string(' ', Console.WindowWidth)); // Clear timer display
+        Console.SetCursorPosition(0, 2); // Move cursor below "Timer stopped" message
+
         Console.WriteLine($"\nTimer stopped. Duration: {duration}");
         Thread.Sleep(1500);
+    }
+
+    public string GetUserInput(string prompt)
+    {
+        _pauseTimerDisplay = true; // Pause timer display to avoid overlap
+        Console.SetCursorPosition(0, Console.CursorTop + 1); // Move input below timer
+        Console.Write(prompt);
+        string input = Console.ReadLine();
+        _pauseTimerDisplay = false; // Resume timer display
+        return input;
     }
 }
 
