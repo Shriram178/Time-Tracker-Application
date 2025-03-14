@@ -7,7 +7,7 @@ public class TimeTrackingManager
     private readonly FileHandler _fileHandler;
     private Stopwatch _stopwatch;
     private string _currentFilePath;
-    private string _workDescription;
+    private string _task;
     private bool _isBillable;
     private bool _isRunning;
     private bool _pauseTimerDisplay;
@@ -18,7 +18,7 @@ public class TimeTrackingManager
         _stopwatch = new Stopwatch();
     }
 
-    public void StartTimer(string username, string project, string task, string subtask, string workDescription, bool isBillable)
+    public void StartTimer(string username, string project, string task, string subtask, bool isBillable)
     {
         if (_stopwatch.IsRunning)
         {
@@ -31,7 +31,7 @@ public class TimeTrackingManager
         Directory.CreateDirectory(subTaskPath);
         _currentFilePath = Path.Combine(subTaskPath, "TimeEntry.csv");
 
-        _workDescription = workDescription;
+        _task = Path.GetFileName(subTaskPath);
         _isBillable = isBillable;
         _stopwatch.Restart();
         _isRunning = true;
@@ -62,10 +62,10 @@ public class TimeTrackingManager
             }
 
             Console.SetCursorPosition(0, 0); // Always show timer on the first line
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.Magenta;
             Console.Write(new string(' ', Console.WindowWidth)); // Clear the line
             Console.SetCursorPosition(0, 0);
-            Console.Write($"Working on {_workDescription} - Elapsed time: {_stopwatch.Elapsed:hh\\:mm\\:ss}\n");
+            Console.Write($"Working on {_task} - Elapsed time: {_stopwatch.Elapsed:hh\\:mm\\:ss}\n");
             Console.ResetColor();
             Thread.Sleep(1000);
         }
@@ -89,7 +89,7 @@ public class TimeTrackingManager
         string startTime = DateTime.Now.Subtract(duration).ToString("yyyy-MM-dd HH:mm:ss");
         string endTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-        File.AppendAllText(_currentFilePath, $"{startTime},{endTime},{_workDescription},{(_isBillable ? "Yes" : "No")}\n");
+        File.AppendAllText(_currentFilePath, $"{startTime},{endTime},{(_isBillable ? "Yes" : "No")}\n");
 
         Console.SetCursorPosition(0, 0);
         Console.Write(new string(' ', Console.WindowWidth)); // Clear timer display

@@ -112,15 +112,16 @@ public class UserInteractor
             return;
         }
 
-
-
         while (true)
         {
             List<string> projectPaths = _fileHandler.GetProjectFolders(_loggedInUser.UserName);
             Dictionary<string, string> projectMap = projectPaths.ToDictionary(p => Path.GetFileName(p), p => p);
 
-            List<string> options = new() { "Create Project", "View Recent Work" };
+            List<string> options = new();
             options.AddRange(projectMap.Keys);
+            options.Add("Create Project");
+            options.Add("View Recent Work");
+
 
 
             string choice = CreateDropDown(options, $"Projects - {_loggedInUser.UserName}", "[Up/Down] to navigate, [Enter] to select, [Esc] to exit");
@@ -146,10 +147,10 @@ public class UserInteractor
     {
         if (_loggedInUser == null) return;
 
-        // Get today's work entries directly from FileHandler
-        List<string> recentWork = _fileHandler.GetRecentProjects(_loggedInUser.UserName);
+        // Get detailed task information directly from FileHandler
+        var detailedTaskInfo = _fileHandler.GetDetailedTaskInfo(_loggedInUser.UserName);
 
-        if (!recentWork.Any())
+        if (!detailedTaskInfo.Any())
         {
             _logger.DisplayFailure("No recent work entries found for today.");
             return;
@@ -158,13 +159,44 @@ public class UserInteractor
         Console.WriteLine("\nRecent Work Today:");
         Console.WriteLine("───────────────────────────────────────────");
 
-        foreach (var project in recentWork)
+        foreach (var project in detailedTaskInfo)
         {
-            Console.WriteLine($" - {project}");
+            TimeSpan projectDuration = project.Value.Values.SelectMany(
+                task => task.Values.SelectMany(
+                    subtask => subtask.Select(
+                        entry => entry.EndTime - entry.StartTime)))
+                .Aggregate(TimeSpan.Zero, (sum, duration) => sum.Add(duration));
+
+            Console.WriteLine($"\n{project.Key} - {projectDuration}");
+
+            foreach (var task in project.Value)
+            {
+                TimeSpan taskDuration = task.Value.Values.SelectMany(
+                    subtask => subtask.Select(
+                        entry => entry.EndTime - entry.StartTime))
+                    .Aggregate(TimeSpan.Zero, (sum, duration) => sum.Add(duration));
+
+                Console.WriteLine($"  {task.Key} - {taskDuration}");
+
+                foreach (var subtask in task.Value)
+                {
+                    TimeSpan subtaskDuration = subtask.Value.Select(
+                        entry => entry.EndTime - entry.StartTime)
+                        .Aggregate(TimeSpan.Zero, (sum, duration) => sum.Add(duration));
+
+                    Console.WriteLine($"    {subtask.Key} - {subtaskDuration}");
+
+                    foreach (var entry in subtask.Value)
+                    {
+                        Console.WriteLine($"      -  {entry.StartTime:HH:mm:ss} - {entry.EndTime:HH:mm:ss}");
+                    }
+                }
+            }
         }
 
         Console.WriteLine("───────────────────────────────────────────\n");
     }
+
 
 
 
@@ -227,9 +259,8 @@ public class UserInteractor
             if (choice == null) return; // Back on ESC
             if (choice == "Start Timer")
             {
-                string workDescription = PromptForInput("Enter work description: ", "Work description cannot be empty!");
                 bool isBillable = CreateDropDown(new List<string> { "Yes", "No" }, "Is this work billable?", "[Up/Down] to navigate, [Enter] to select") == "Yes";
-                _timeTrackingManager.StartTimer(username, project, task, subtask, workDescription, isBillable);
+                _timeTrackingManager.StartTimer(username, project, task, subtask, isBillable);
                 _logger.DisplaySuccess("Timer started for subtask!");
             }
             else if (choice == "Stop Timer")

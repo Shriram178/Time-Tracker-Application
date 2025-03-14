@@ -59,21 +59,113 @@ public class FileHandler
     }
 
     /// <summary>
-    /// Gets the list of projects the user has worked on today based on the folder's last modified date.
+    /// Gathers detailed information about tasks and subtasks, including their durations and descriptions.
     /// </summary>
-    public List<string> GetRecentProjects(string username)
+    /// <param name="username">The username of the user.</param>
+    /// <returns>A dictionary containing detailed task information.</returns>
+    public Dictionary<string, Dictionary<string, Dictionary<string, List<(string Description, DateTime StartTime, DateTime EndTime)>>>> GetDetailedTaskInfo(string username)
     {
         string userPath = Path.Combine(BaseDirectory, "Users", username);
         if (!Directory.Exists(userPath))
-            return new List<string>();
+            return new Dictionary<string, Dictionary<string, Dictionary<string, List<(string Description, DateTime StartTime, DateTime EndTime)>>>>();
 
         DateTime today = DateTime.Today;
-        return Directory.GetDirectories(userPath)
-            .Select(dir => new DirectoryInfo(dir))
-            .Where(dirInfo => dirInfo.LastWriteTime.Date == today)
-            .OrderByDescending(dirInfo => dirInfo.LastWriteTime)
-            .Select(dirInfo => dirInfo.Name)
-            .ToList();
+        var detailedTaskInfo = new Dictionary<string, Dictionary<string, Dictionary<string, List<(string Description, DateTime StartTime, DateTime EndTime)>>>>();
+
+        foreach (var projectDir in Directory.GetDirectories(userPath))
+        {
+            DirectoryInfo projectInfo = new DirectoryInfo(projectDir);
+            if (projectInfo.LastWriteTime.Date != today)
+                continue;
+
+            string projectName = projectInfo.Name;
+            var projectTasks = GetProjectTasks(projectDir, today);
+
+            if (projectTasks.Any())
+            {
+                detailedTaskInfo[projectName] = projectTasks;
+            }
+        }
+
+        return detailedTaskInfo;
+    }
+
+    /// <summary>
+    /// Retrieves tasks for a given project directory.
+    /// </summary>
+    /// <param name="projectDir">The project directory path.</param>
+    /// <param name="today">The current date.</param>
+    /// <returns>A dictionary containing task information.</returns>
+    private Dictionary<string, Dictionary<string, List<(string Description, DateTime StartTime, DateTime EndTime)>>> GetProjectTasks(string projectDir, DateTime today)
+    {
+        var projectTasks = new Dictionary<string, Dictionary<string, List<(string Description, DateTime StartTime, DateTime EndTime)>>>();
+
+        foreach (var taskDir in Directory.GetDirectories(projectDir))
+        {
+            string taskName = Path.GetFileName(taskDir);
+            var taskSubtasks = GetTaskSubtasks(taskDir, today);
+
+            if (taskSubtasks.Any())
+            {
+                projectTasks[taskName] = taskSubtasks;
+            }
+        }
+
+        return projectTasks;
+    }
+
+    /// <summary>
+    /// Retrieves subtasks for a given task directory.
+    /// </summary>
+    /// <param name="taskDir">The task directory path.</param>
+    /// <param name="today">The current date.</param>
+    /// <returns>A dictionary containing subtask information.</returns>
+    private Dictionary<string, List<(string Description, DateTime StartTime, DateTime EndTime)>> GetTaskSubtasks(string taskDir, DateTime today)
+    {
+        var taskSubtasks = new Dictionary<string, List<(string Description, DateTime StartTime, DateTime EndTime)>>();
+
+        foreach (var subtaskDir in Directory.GetDirectories(taskDir))
+        {
+            string subtaskName = Path.GetFileName(subtaskDir);
+            var subtaskEntries = GetSubtaskEntries(subtaskDir, today);
+
+            if (subtaskEntries.Any())
+            {
+                taskSubtasks[subtaskName] = subtaskEntries;
+            }
+        }
+
+        return taskSubtasks;
+    }
+
+    /// <summary>
+    /// Retrieves time entries for a given subtask directory.
+    /// </summary>
+    /// <param name="subtaskDir">The subtask directory path.</param>
+    /// <param name="today">The current date.</param>
+    /// <returns>A list of time entries for the subtask.</returns>
+    private List<(string Description, DateTime StartTime, DateTime EndTime)> GetSubtaskEntries(string subtaskDir, DateTime today)
+    {
+        var subtaskEntries = new List<(string Description, DateTime StartTime, DateTime EndTime)>();
+
+        string timeEntryFile = Path.Combine(subtaskDir, "TimeEntry.csv");
+        if (File.Exists(timeEntryFile))
+        {
+            var lines = File.ReadAllLines(timeEntryFile);
+            foreach (var line in lines)
+            {
+                var data = line.Split(',');
+                if (data.Length == 3 && DateTime.TryParse(data[0], out DateTime startTime) && DateTime.TryParse(data[1], out DateTime endTime))
+                {
+                    if (startTime.Date == today)
+                    {
+                        subtaskEntries.Add((data[2], startTime, endTime));
+                    }
+                }
+            }
+        }
+
+        return subtaskEntries;
     }
 
 }
