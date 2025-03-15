@@ -247,7 +247,7 @@ public class UserInteractor
             List<string> options = new() { "Create Subtask\n" };
             options.AddRange(subtaskMap.Keys);
 
-            string choice = CreateDropDown(options, $"Subtasks in {Path.GetFileName(taskPath)}", "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
+            string choice = CreateDropDown(options, $"Subtasks for Task '{Path.GetFileName(taskPath)}' under Project '{Path.GetFileName(Path.GetDirectoryName(taskPath))}'", "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
 
             if (choice == null) return; // Back on ESC
             if (choice == "Create Subtask\n")
