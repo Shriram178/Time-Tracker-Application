@@ -2,11 +2,18 @@
 
 namespace TimeTracker;
 
+/// <summary>
+/// Manages user registration, authentication, and retrieval.
+/// </summary>
 public class UserManager
 {
     private IList<User> userList;
     private readonly FileHandler _fileHandler;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserManager"/> class.
+    /// </summary>
+    /// <param name="fileHandler">The file handler for managing file operations.</param>
     public UserManager(FileHandler fileHandler)
     {
         _fileHandler = fileHandler;

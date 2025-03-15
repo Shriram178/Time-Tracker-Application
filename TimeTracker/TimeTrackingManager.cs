@@ -2,6 +2,9 @@
 
 namespace TimeTracker;
 
+/// <summary>
+/// Manages time tracking operations, including starting, stopping, and displaying timers.
+/// </summary>
 public class TimeTrackingManager
 {
     private readonly FileHandler _fileHandler;
@@ -12,12 +15,24 @@ public class TimeTrackingManager
     private bool _isRunning;
     private bool _pauseTimerDisplay;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimeTrackingManager"/> class.
+    /// </summary>
+    /// <param name="fileHandler">The file handler for managing file operations.</param>
     public TimeTrackingManager(FileHandler fileHandler)
     {
         _fileHandler = fileHandler;
         _stopwatch = new Stopwatch();
     }
 
+    /// <summary>
+    /// Starts the timer for a specified task and subtask.
+    /// </summary>
+    /// <param name="username">The username of the user.</param>
+    /// <param name="project">The name of the project.</param>
+    /// <param name="task">The name of the task.</param>
+    /// <param name="subtask">The name of the subtask.</param>
+    /// <param name="isBillable">Indicates whether the task is billable.</param>
     public void StartTimer(string username, string project, string task, string subtask, bool isBillable)
     {
         if (_stopwatch.IsRunning)
@@ -45,12 +60,18 @@ public class TimeTrackingManager
         timerThread.Start();
     }
 
+    /// <summary>
+    /// Pauses or resumes the timer display.
+    /// </summary>
+    /// <param name="pause">Indicates whether to pause the timer display.</param>
     public void PauseTimerDisplay(bool pause)
     {
         _pauseTimerDisplay = pause;
     }
 
-
+    /// <summary>
+    /// Displays the timer on the console.
+    /// </summary>
     private void DisplayTimer()
     {
         while (_isRunning)
@@ -75,6 +96,9 @@ public class TimeTrackingManager
         Console.Write(new string(' ', Console.WindowWidth));
     }
 
+    /// <summary>
+    /// Stops the currently running timer and logs the time entry.
+    /// </summary>
     public void StopTimer()
     {
         if (!_stopwatch.IsRunning)
@@ -99,6 +123,9 @@ public class TimeTrackingManager
         Thread.Sleep(1500);
     }
 
+    /// <summary>
+    /// Stops the currently running timer and logs the time entry.
+    /// </summary>
     public string GetUserInput(string prompt)
     {
         _pauseTimerDisplay = true; // Pause timer display to avoid overlap
