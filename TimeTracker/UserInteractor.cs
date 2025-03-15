@@ -123,9 +123,6 @@ public class UserInteractor
             options.Add($"Export Recent Work\n");
             options.AddRange(projectMap.Keys);
 
-
-
-
             string choice = CreateDropDown(options, $"Projects of {_loggedInUser.UserName} along with Project Operations :", "[Up/Down] to navigate, [Enter] to select, [Esc] to exit");
 
             if (choice == null) return; // Exit on ESC

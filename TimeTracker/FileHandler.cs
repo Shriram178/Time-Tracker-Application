@@ -23,7 +23,7 @@ public class FileHandler
     /// Ensures the specified directory exists, creating it if necessary.
     /// </summary>
     /// <param name="path">The path of the directory to check or create.</param>
-    private void EnsureDirectoryExists(string path)
+    public void EnsureDirectoryExists(string path)
     {
         if (!Directory.Exists(path))
             Directory.CreateDirectory(path);
