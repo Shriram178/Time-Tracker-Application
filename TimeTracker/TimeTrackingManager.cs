@@ -65,7 +65,7 @@ public class TimeTrackingManager
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.Write(new string(' ', Console.WindowWidth)); // Clear the line
             Console.SetCursorPosition(0, 0);
-            Console.Write($"Working on {_task} - Elapsed time: {_stopwatch.Elapsed:hh\\:mm\\:ss}\n");
+            Console.Write($"Working on {_task} - Elapsed time: {_stopwatch.Elapsed:hh\\:mm\\:ss}\n\n");
             Console.ResetColor();
             Thread.Sleep(1000);
         }

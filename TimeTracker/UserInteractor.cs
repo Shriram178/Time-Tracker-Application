@@ -115,16 +115,18 @@ public class UserInteractor
         while (true)
         {
             List<string> projectPaths = _fileHandler.GetProjectFolders(_loggedInUser.UserName);
-            Dictionary<string, string> projectMap = projectPaths.ToDictionary(p => Path.GetFileName(p), p => p);
+            Dictionary<string, string> projectMap = projectPaths.ToDictionary(p => Path.GetFileName(p).Replace("Project_", ""), p => p);
 
             List<string> options = new();
-            options.AddRange(projectMap.Keys);
             options.Add("Create Project");
             options.Add("View Recent Work");
+            options.Add($"Export Recent Work\n");
+            options.AddRange(projectMap.Keys);
 
 
 
-            string choice = CreateDropDown(options, $"Projects - {_loggedInUser.UserName}", "[Up/Down] to navigate, [Enter] to select, [Esc] to exit");
+
+            string choice = CreateDropDown(options, $"Projects of {_loggedInUser.UserName} along with Project Operations :", "[Up/Down] to navigate, [Enter] to select, [Esc] to exit");
 
             if (choice == null) return; // Exit on ESC
             if (choice == "Create Project")
@@ -136,6 +138,13 @@ public class UserInteractor
                 DisplayRecentWork();
                 Console.ReadLine(); // Pause to allow user to read the recent work
             }
+            else if (choice == "Export Recent Work\n")
+            {
+                if (_loggedInUser == null) return;
+
+                _fileHandler.ExportRecentWorkToFile(_loggedInUser.UserName);
+                _logger.DisplaySuccess("[+] File exported !!");
+            }
             else
             {
                 ShowTaskMenu(_loggedInUser.UserName, projectMap[choice]); // Pass full path
@@ -143,24 +152,28 @@ public class UserInteractor
         }
     }
 
-    private void DisplayRecentWork()
+    private void DisplayRecentWork(int count = -1)
     {
         if (_loggedInUser == null) return;
 
         // Get detailed task information directly from FileHandler
+        int iterations = 0;
         var detailedTaskInfo = _fileHandler.GetDetailedTaskInfo(_loggedInUser.UserName);
 
         if (!detailedTaskInfo.Any())
         {
-            _logger.DisplayFailure("No recent work entries found for today.");
+            _logger.DisplayTitle("[-] No recent work entries found for today.");
             return;
         }
 
-        Console.WriteLine("\nRecent Work Today:");
+        string numberOfEntries = count == -1 ? "" : $"{count}";
+
+        Console.WriteLine($"\n{numberOfEntries} Recent Work's performed Today:");
         Console.WriteLine("───────────────────────────────────────────");
 
         foreach (var project in detailedTaskInfo)
         {
+            if (iterations++ == count) { break; }
             TimeSpan projectDuration = project.Value.Values.SelectMany(
                 task => task.Values.SelectMany(
                     subtask => subtask.Select(
@@ -197,23 +210,23 @@ public class UserInteractor
         Console.WriteLine("───────────────────────────────────────────\n");
     }
 
-
-
-
     private void ShowTaskMenu(string username, string projectPath)
     {
         while (true)
         {
             List<string> taskPaths = _fileHandler.GetTaskFolders(username, projectPath);
-            Dictionary<string, string> taskMap = taskPaths.ToDictionary(t => Path.GetFileName(t), t => t);
+            Dictionary<string, string> taskMap = taskPaths.ToDictionary(t => Path.GetFileName(
+                t.Replace("Task_", "")), t => t);
 
-            List<string> options = new() { "Create Task" };
+            List<string> options = new() { "Create Task\n" };
             options.AddRange(taskMap.Keys);
 
-            string choice = CreateDropDown(options, $"Tasks in {Path.GetFileName(projectPath)}", "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
+            string choice = CreateDropDown(options,
+                $"Tasks in {Path.GetFileName(projectPath)}",
+                "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
 
             if (choice == null) return; // Back on ESC
-            if (choice == "Create Task")
+            if (choice == "Create Task\n")
             {
                 CreateTask(username, projectPath);
             }
@@ -229,15 +242,15 @@ public class UserInteractor
         while (true)
         {
             List<string> subtaskPaths = _fileHandler.GetSubTaskFolders(username, projectPath, taskPath);
-            Dictionary<string, string> subtaskMap = subtaskPaths.ToDictionary(st => Path.GetFileName(st), st => st);
+            Dictionary<string, string> subtaskMap = subtaskPaths.ToDictionary(st => Path.GetFileName(st).Replace("SubTask_", ""), st => st);
 
-            List<string> options = new() { "Create Subtask" };
+            List<string> options = new() { "Create Subtask\n" };
             options.AddRange(subtaskMap.Keys);
 
             string choice = CreateDropDown(options, $"Subtasks in {Path.GetFileName(taskPath)}", "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
 
             if (choice == null) return; // Back on ESC
-            if (choice == "Create Subtask")
+            if (choice == "Create Subtask\n")
             {
                 CreateSubtask(username, projectPath, taskPath);
             }
@@ -328,6 +341,11 @@ public class UserInteractor
     private void DrawMenu<T>(IList<T> categories, int selectedIndex, string message, string menuOptions)
     {
         Console.Clear();
+        if (categories != StringConstants.Authorization)
+        {
+            DisplayRecentWork(2);
+            Console.WriteLine();
+        }
         _logger.DisplayTitle(message);
 
         // Get the current cursor position after printing the message

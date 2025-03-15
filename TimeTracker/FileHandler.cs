@@ -75,8 +75,6 @@ public class FileHandler
         foreach (var projectDir in Directory.GetDirectories(userPath))
         {
             DirectoryInfo projectInfo = new DirectoryInfo(projectDir);
-            if (projectInfo.LastWriteTime.Date != today)
-                continue;
 
             string projectName = projectInfo.Name;
             var projectTasks = GetProjectTasks(projectDir, today);
@@ -88,6 +86,65 @@ public class FileHandler
         }
 
         return detailedTaskInfo;
+    }
+
+    public void ExportRecentWorkToFile(string userName, int count = -1)
+    {
+        string filePath = Path.Combine(BaseDirectory, "Users", userName, "RecentWork.txt");
+        var detailedTaskInfo = GetDetailedTaskInfo(userName);
+
+        if (!detailedTaskInfo.Any())
+        {
+            Console.WriteLine("[-] No recent work entries found for today.");
+            return;
+        }
+
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            string numberOfEntries = count == -1 ? "" : $"{count}";
+            writer.WriteLine($"\n{numberOfEntries} Recent Work's performed Today:");
+            writer.WriteLine("───────────────────────────────────────────");
+
+            int iterations = 0;
+            foreach (var project in detailedTaskInfo)
+            {
+                if (iterations++ == count) break;
+
+                TimeSpan projectDuration = project.Value.Values.SelectMany(
+                    task => task.Values.SelectMany(
+                        subtask => subtask.Select(
+                            entry => entry.EndTime - entry.StartTime)))
+                    .Aggregate(TimeSpan.Zero, (sum, duration) => sum.Add(duration));
+
+                writer.WriteLine($"\n{project.Key} - {projectDuration}");
+
+                foreach (var task in project.Value)
+                {
+                    TimeSpan taskDuration = task.Value.Values.SelectMany(
+                        subtask => subtask.Select(
+                            entry => entry.EndTime - entry.StartTime))
+                        .Aggregate(TimeSpan.Zero, (sum, duration) => sum.Add(duration));
+
+                    writer.WriteLine($"  {task.Key} - {taskDuration}");
+
+                    foreach (var subtask in task.Value)
+                    {
+                        TimeSpan subtaskDuration = subtask.Value.Select(
+                            entry => entry.EndTime - entry.StartTime)
+                            .Aggregate(TimeSpan.Zero, (sum, duration) => sum.Add(duration));
+
+                        writer.WriteLine($"    {subtask.Key} - {subtaskDuration}");
+
+                        foreach (var entry in subtask.Value)
+                        {
+                            writer.WriteLine($"      -  {entry.StartTime:HH:mm:ss} - {entry.EndTime:HH:mm:ss}");
+                        }
+                    }
+                }
+            }
+
+            writer.WriteLine("───────────────────────────────────────────\n");
+        }
     }
 
     /// <summary>

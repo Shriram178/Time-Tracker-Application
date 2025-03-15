@@ -23,7 +23,7 @@ public class Logger
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine(message);
         Console.ResetColor();
-        Thread.Sleep(500);
+        Thread.Sleep(1500);
     }
 
     /// <summary>
