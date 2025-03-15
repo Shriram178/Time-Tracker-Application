@@ -1,9 +1,15 @@
 ﻿namespace TimeTracker;
 
+/// <summary>
+/// Handles file operations for the taskify app.
+/// </summary>
 public class FileHandler
 {
     private readonly string BaseDirectory;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileHandler"/> class.
+    /// </summary>
     public FileHandler()
     {
         BaseDirectory = Path.Combine(Environment.GetFolderPath(
@@ -13,45 +19,94 @@ public class FileHandler
         EnsureDirectoryExists(BaseDirectory);
     }
 
+    /// <summary>
+    /// Ensures the specified directory exists, creating it if necessary.
+    /// </summary>
+    /// <param name="path">The path of the directory to check or create.</param>
     private void EnsureDirectoryExists(string path)
     {
         if (!Directory.Exists(path))
             Directory.CreateDirectory(path);
     }
 
+    /// <summary>
+    /// Gets the file path for the users file.
+    /// </summary>
+    /// <returns>The file path for the users file.</returns>
     public string GetUsersFilePath() => Path.Combine(BaseDirectory, "Users.csv");
+
+    /// <summary>
+    /// Gets the file path for the projects file.
+    /// </summary>
+    /// <returns>The file path for the projects file.</returns>
     public string GetProjectsFilePath() => Path.Combine(BaseDirectory, "Projects.csv");
 
+    /// <summary>
+    /// Creates a folder for a new project.
+    /// </summary>
+    /// <param name="username">The username of the user.</param>
+    /// <param name="projectName">The name of the project.</param>
     public void CreateProjectFolder(string username, string projectName)
     {
         string projectPath = Path.Combine(BaseDirectory, "Users", username, "Project_" + projectName);
         EnsureDirectoryExists(projectPath);
     }
 
+    /// <summary>
+    /// Gets the folders for all projects of a user.
+    /// </summary>
+    /// <param name="username">The username of the user.</param>
+    /// <returns>A list of project folder paths.</returns>
     public List<string> GetProjectFolders(string username)
     {
         string userPath = Path.Combine(BaseDirectory, "Users", username);
         return Directory.Exists(userPath) ? new List<string>(Directory.GetDirectories(userPath)) : new List<string>();
     }
 
+    /// <summary>
+    /// Creates a folder for a new task within a project.
+    /// </summary>
+    /// <param name="username">The username of the user.</param>
+    /// <param name="projectName">The name of the project.</param>
+    /// <param name="taskName">The name of the task.</param>
     public void CreateTaskFolder(string username, string projectName, string taskName)
     {
         string taskPath = Path.Combine(BaseDirectory, "Users", username, projectName, "Task_" + taskName);
         EnsureDirectoryExists(taskPath);
     }
 
+    /// <summary>
+    /// Gets the folders for all tasks within a project.
+    /// </summary>
+    /// <param name="username">The username of the user.</param>
+    /// <param name="projectName">The name of the project.</param>
+    /// <returns>A list of task folder paths.</returns>
     public List<string> GetTaskFolders(string username, string projectName)
     {
         string projectPath = Path.Combine(BaseDirectory, "Users", username, projectName);
         return Directory.Exists(projectPath) ? new List<string>(Directory.GetDirectories(projectPath)) : new List<string>();
     }
 
+    /// <summary>
+    /// Creates a folder for a new subtask within a task.
+    /// </summary>
+    /// <param name="username">The username of the user.</param>
+    /// <param name="projectName">The name of the project.</param>
+    /// <param name="taskName">The name of the task.</param>
+    /// <param name="subTaskName">The name of the subtask.</param>
     public void CreateSubTaskFolder(string username, string projectName, string taskName, string subTaskName)
     {
         string subTaskPath = Path.Combine(BaseDirectory, "Users", username, projectName, taskName, "SubTask_" + subTaskName);
         EnsureDirectoryExists(subTaskPath);
     }
 
+    /// <summary>
+    /// Gets the folders for all subtasks within a task.
+    /// </summary>
+    /// <param name="username">The username of the user.</param>
+    /// <param name="projectName">The name of the project.</param>
+    /// <param name="taskName">The name of the task.</param>
+    /// <returns>A list of subtask folder paths.</returns>
     public List<string> GetSubTaskFolders(string username, string projectName, string taskName)
     {
         string taskPath = Path.Combine(BaseDirectory, "Users", username, projectName, taskName);
@@ -88,7 +143,12 @@ public class FileHandler
         return detailedTaskInfo;
     }
 
-    public void ExportRecentWorkToFile(string userName, int count = -1)
+    /// <summary>
+    /// Exports recent work to a file.
+    /// </summary>
+    /// <param name="userName">The username of the user.</param>
+    /// <param name="count">The number of recent work entries to export. Default is -1 (all entries).</param>
+    public void ExportRecentWorkToFile(string userName)
     {
         string filePath = Path.Combine(BaseDirectory, "Users", userName, "RecentWork.txt");
         var detailedTaskInfo = GetDetailedTaskInfo(userName);
@@ -101,14 +161,11 @@ public class FileHandler
 
         using (StreamWriter writer = new StreamWriter(filePath))
         {
-            string numberOfEntries = count == -1 ? "" : $"{count}";
-            writer.WriteLine($"\n{numberOfEntries} Recent Work's performed Today:");
+            writer.WriteLine($"\nRecent Work's performed Today:");
             writer.WriteLine("───────────────────────────────────────────");
 
-            int iterations = 0;
             foreach (var project in detailedTaskInfo)
             {
-                if (iterations++ == count) break;
 
                 TimeSpan projectDuration = project.Value.Values.SelectMany(
                     task => task.Values.SelectMany(
