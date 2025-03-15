@@ -118,7 +118,8 @@ public class FileHandler
     /// </summary>
     /// <param name="username">The username of the user.</param>
     /// <returns>A dictionary containing detailed task information.</returns>
-    public Dictionary<string, Dictionary<string, Dictionary<string, List<(string Description, DateTime StartTime, DateTime EndTime)>>>> GetDetailedTaskInfo(string username)
+    public Dictionary<string, Dictionary<string, Dictionary<string, List<
+        (string Description, DateTime StartTime, DateTime EndTime)>>>> GetDetailedTaskInfo(string username)
     {
         string userPath = Path.Combine(BaseDirectory, "Users", username);
         if (!Directory.Exists(userPath))
