@@ -1,7 +1,13 @@
 ﻿namespace TimeTracker;
 
+/// <summary>
+/// The main entry point for the Taskify.
+/// </summary>
 public class Program
 {
+    /// <summary>
+    /// The main method that initializes and runs the application.
+    /// </summary>
     static void Main()
     {
         Console.WindowWidth = 190;
@@ -15,6 +21,11 @@ public class Program
         RunApplication(userInteractor, logger);
     }
 
+    /// <summary>
+    /// Runs the main application loop, displaying the menu and handling user choices.
+    /// </summary>
+    /// <param name="userInteractor">The user interactor for handling user interactions.</param>
+    /// <param name="logger">The logger for displaying messages.</param>
     static void RunApplication(UserInteractor userInteractor, Logger logger)
     {
         bool isRunning = true;
