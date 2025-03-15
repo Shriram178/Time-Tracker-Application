@@ -33,7 +33,12 @@ public class TimeTrackingManager
     /// <param name="task">The name of the task.</param>
     /// <param name="subtask">The name of the subtask.</param>
     /// <param name="isBillable">Indicates whether the task is billable.</param>
-    public void StartTimer(string username, string project, string task, string subtask, bool isBillable)
+    public void StartTimer(
+        string username,
+        string project,
+        string task,
+        string subtask,
+        bool isBillable)
     {
         if (_stopwatch.IsRunning)
         {
@@ -42,7 +47,10 @@ public class TimeTrackingManager
             return;
         }
 
-        string subTaskPath = Path.Combine(_fileHandler.GetProjectsFilePath(), "Users", username, project, task, subtask);
+        string subTaskPath = Path.Combine(
+            _fileHandler.GetProjectsFilePath(),
+            "Users", username, project, task, subtask);
+
         Directory.CreateDirectory(subTaskPath);
         _currentFilePath = Path.Combine(subTaskPath, "TimeEntry.csv");
 
@@ -52,7 +60,7 @@ public class TimeTrackingManager
         _isRunning = true;
         _pauseTimerDisplay = false;
 
-        Console.Clear(); // Clear screen and reserve the first line for the timer
+        Console.Clear();
         Console.SetCursorPosition(0, 1);
         Console.WriteLine("Timer started...");
 
@@ -82,9 +90,9 @@ public class TimeTrackingManager
                 continue;
             }
 
-            Console.SetCursorPosition(0, 0); // Always show timer on the first line
+            Console.SetCursorPosition(0, 0);
             Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.Write(new string(' ', Console.WindowWidth)); // Clear the line
+            Console.Write(new string(' ', Console.WindowWidth));
             Console.SetCursorPosition(0, 0);
             Console.Write($"Working on {_task} - Elapsed time: {_stopwatch.Elapsed:hh\\:mm\\:ss}\n\n");
             Console.ResetColor();
@@ -116,8 +124,8 @@ public class TimeTrackingManager
         File.AppendAllText(_currentFilePath, $"{startTime},{endTime},{(_isBillable ? "Yes" : "No")}\n");
 
         Console.SetCursorPosition(0, 0);
-        Console.Write(new string(' ', Console.WindowWidth)); // Clear timer display
-        Console.SetCursorPosition(0, 2); // Move cursor below "Timer stopped" message
+        Console.Write(new string(' ', Console.WindowWidth));
+        Console.SetCursorPosition(0, 2);
 
         Console.WriteLine($"\nTimer stopped. Duration: {duration}");
         Thread.Sleep(1500);
@@ -129,10 +137,10 @@ public class TimeTrackingManager
     public string GetUserInput(string prompt)
     {
         _pauseTimerDisplay = true; // Pause timer display to avoid overlap
-        Console.SetCursorPosition(0, Console.CursorTop + 1); // Move input below timer
+        Console.SetCursorPosition(0, Console.CursorTop + 1);
         Console.Write(prompt);
         string input = Console.ReadLine();
-        _pauseTimerDisplay = false; // Resume timer display
+        _pauseTimerDisplay = false;
         return input;
     }
 }

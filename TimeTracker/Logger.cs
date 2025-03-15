@@ -1,5 +1,9 @@
 ﻿namespace TimeTracker;
 
+/// <summary>
+/// Performs logging operation
+/// to convey message to user
+/// </summary>
 public class Logger
 {
     /// <summary>

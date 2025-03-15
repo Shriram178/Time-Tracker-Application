@@ -42,8 +42,10 @@ public class UserManager
     private void SaveUsers()
     {
         var usersFilePath = _fileHandler.GetUsersFilePath();
-        List<string> lines = userList.Select(u => $"{u.UserName},{u.Password},{u.IsManager}").ToList();
-        File.WriteAllLines(usersFilePath, lines);
+        List<string> userData = userList
+            .Select(u => $"{u.UserName},{u.Password},{u.IsManager}").ToList();
+
+        File.WriteAllLines(usersFilePath, userData);
     }
 
     /// <summary>
@@ -54,8 +56,8 @@ public class UserManager
         var usersFilePath = _fileHandler.GetUsersFilePath();
         if (!File.Exists(usersFilePath)) return new List<User>();
 
-        var lines = File.ReadAllLines(usersFilePath);
-        return lines.Select(line =>
+        var userData = File.ReadAllLines(usersFilePath);
+        return userData.Select(line =>
         {
             var parts = line.Split(',');
             bool isManager = bool.TryParse(parts[2], out bool result) ? result : false;

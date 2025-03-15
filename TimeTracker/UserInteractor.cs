@@ -18,7 +18,10 @@ public class UserInteractor
     /// <summary>
     /// Constructor to perform dependency injection.
     /// </summary>
-    public UserInteractor(UserManager userManager, Logger logger, FileHandler fileHandler, TimeTrackingManager timeTrackingManager)
+    public UserInteractor(UserManager userManager,
+        Logger logger,
+        FileHandler fileHandler,
+        TimeTrackingManager timeTrackingManager)
     {
         _userManager = userManager;
         _logger = logger;
@@ -57,7 +60,7 @@ public class UserInteractor
         string userPassword = GetUserPassword();
 
         // Ask if the user is a manager (Dropdown choice)
-        string roleChoice = CreateDropDown(StringConstants.UserRoles,
+        string? roleChoice = CreateDropDown(StringConstants.UserRoles,
                                            "Select User Role:",
                                            "[Up/Down] to navigate, [Enter] to select");
 
@@ -68,7 +71,8 @@ public class UserInteractor
         _userManager.RegisterUser(user);
 
         Console.Clear();
-        _logger.DisplaySuccess($"User {userName} created successfully as {(isManager ? "Manager" : "Regular User")}!");
+        _logger.DisplaySuccess(
+            $"User {userName} created successfully as {(isManager ? "Manager" : "Regular User")}!");
     }
 
     /// <summary>
@@ -115,7 +119,8 @@ public class UserInteractor
         while (true)
         {
             List<string> projectPaths = _fileHandler.GetProjectFolders(_loggedInUser.UserName);
-            Dictionary<string, string> projectMap = projectPaths.ToDictionary(p => Path.GetFileName(p).Replace("Project_", ""), p => p);
+            Dictionary<string, string> projectMap = projectPaths
+                .ToDictionary(p => Path.GetFileName(p).Replace("Project_", ""), p => p);
 
             List<string> options = new();
             options.Add("Create Project");
@@ -123,7 +128,9 @@ public class UserInteractor
             options.Add($"Export Recent Work\n");
             options.AddRange(projectMap.Keys);
 
-            string choice = CreateDropDown(options, $"Projects of {_loggedInUser.UserName} along with Project Operations :", "[Up/Down] to navigate, [Enter] to select, [Esc] to exit");
+            string? choice = CreateDropDown(options,
+                $"Projects of {_loggedInUser.UserName} along with Project Operations :",
+                "[Up/Down] to navigate, [Enter] to select, [Esc] to exit");
 
             if (choice == null) return; // Exit on ESC
             if (choice == "Create Project")
@@ -218,7 +225,7 @@ public class UserInteractor
             List<string> options = new() { "Create Task\n" };
             options.AddRange(taskMap.Keys);
 
-            string choice = CreateDropDown(options,
+            string? choice = CreateDropDown(options,
                 $"Tasks in {Path.GetFileName(projectPath)}",
                 "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
 
@@ -244,7 +251,9 @@ public class UserInteractor
             List<string> options = new() { "Create Subtask\n" };
             options.AddRange(subtaskMap.Keys);
 
-            string choice = CreateDropDown(options, $"Subtasks for Task '{Path.GetFileName(taskPath)}' under Project '{Path.GetFileName(Path.GetDirectoryName(taskPath))}'", "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
+            string? choice = CreateDropDown(options,
+                $"Subtasks for Task '{Path.GetFileName(taskPath)}' under Project '{Path.GetFileName(Path.GetDirectoryName(taskPath))}'",
+                "[Up/Down] to navigate, [Enter] to select, [Esc] to go back");
 
             if (choice == null) return; // Back on ESC
             if (choice == "Create Subtask\n")
